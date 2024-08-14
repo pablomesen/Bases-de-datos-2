@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "TC01_BD2"
+version = "0.1.0"
+description = "REST API con autenticación JWT y PostgreSQL"
+authors = ["Daniel Zeas", "Esteban Solano", "Pablo Mesén"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.112.0"
+uvicorn = {extras = ["standard"], version = "^0.30.6"}
+pydantic = {extras = ["email"], version = "^2.8.2"}
+sqlalchemy = "^2.0.28"
+psycopg2-binary = "^2.9.9"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+requests = "^2.26.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-multipart = "^0.0.7"
+python-keycloak = "^3.9.1"
+alembic = "^1.13.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+httpx = "^0.27.0"
+pytest-asyncio = "^0.23.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
