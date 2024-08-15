@@ -47,4 +47,3 @@ def get_token(username: str, password: str):
     )
     response.raise_for_status()
     return response.json()
-

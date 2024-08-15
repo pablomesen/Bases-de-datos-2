@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from ..models.user import UserCreate, User
-from ..auth.jwt_handler import get_current_user
-from ..utils.db import Database
+from ..auth.keycloak import get_current_user
+from ..utils import Database
 
 router = APIRouter()
 db = Database()

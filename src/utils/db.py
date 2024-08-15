@@ -1,4 +1,3 @@
-import os
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -7,7 +6,6 @@ from ..models.user import UserRole, UserCreate
 from ..models.post import PostType, PostCreate
 import datetime
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db:5432/keycloak")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -33,13 +31,11 @@ class PostDB(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 class Database:
     def __init__(self):
         self.engine = engine
         Base.metadata.create_all(bind=self.engine)
+        self.db = SessionLocal()
 
     def create_user(self, user: UserCreate):
         db_user = UserDB(**user.dict())

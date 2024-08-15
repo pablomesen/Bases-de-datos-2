@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import JWTError
 from .keycloak_config import keycloak_openid
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="auth/token")

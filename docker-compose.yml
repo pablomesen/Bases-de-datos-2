@@ -6,26 +6,22 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - 8000:8000
-    # Para el manejo de variables de conexión a la DB, SIEMPRE se deben de definir en el archivo docker-compose.yml
     environment:
-      # NO SE SI DESCOMENTAR ESTAS VARIABLES DE ENTORNO
-      # - DB_HOST = db # Aquí podría definir la IP de una DB en cloud
-      # - DB_PORT = 5432
-      # - DB_NAME = db
-      # - DB_USER = user
-      # - DB_PASSWORD = password
-      - DATABASE_URL = postgresql://user:password@db:5432/db
-      - KEYCLOAK_URL = http://keycloak:8080
-      - KEYCLOAK_REALM = myrealm
-      - KEYCLOAK_CLIENT_ID = myclient
-      - KEYCLOAK_CLIENT_SECRET = mysecret
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=keycloak
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=myrealm
+      - KEYCLOAK_CLIENT_ID=myclient
+      - KEYCLOAK_CLIENT_SECRET=mysecret
     depends_on:
       - db
       - keycloak
     networks:
       - default
 
-  # Si tengo environment variables definido en services, ignora las variables de entorno definidas en db
   db:
     image: postgres:13
     environment:
@@ -44,13 +40,15 @@ services:
       timeout: 5s
       retries: 5
 
-  pgAdmin:
+  pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: estebanjs029@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: test
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - 5050:80
+    networks:
+      - default
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -68,7 +66,8 @@ services:
         condition: service_healthy
     command:
       - start-dev
-      - --http-relative-path=/auth
+    networks:
+      - default
 
 networks:
   default:
