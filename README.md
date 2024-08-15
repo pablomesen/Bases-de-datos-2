@@ -10,8 +10,10 @@ Autores:
 Comandos para ejecutar la base de la TC01 (en terminal con admin privileges):
 1. poetry lock --no-update
 2. poetry install
-3. docker-compose down -v
-4. docker-compose up --build
+# Elimina los volumenes actuales
+3. docker-compose down -v 
+4. docker-compose down
+5. docker-compose up --build
 
 Agregar acá instrucciones sobre cómo construir y desplegar la aplicación usando Docker y Docker Compose,
 incluyendo cómo realizar pruebas básicas
