@@ -15,7 +15,7 @@ services:
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_CLIENT_ID=myclient
-      - KEYCLOAK_CLIENT_SECRET=mysecret
+      - KEYCLOAK_CLIENT_SECRET=mysecret # Este es el secret que se obtiene en la configuración del cliente en Keycloak
     depends_on:
       - db
       - keycloak
@@ -29,7 +29,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: keycloak
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
     networks:
@@ -59,6 +60,8 @@ services:
       KC_DB_URL: jdbc:postgresql://db:5432/keycloak
       KC_DB_USERNAME: user
       KC_DB_PASSWORD: password
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     ports:
       - "8080:8080"
     depends_on:
@@ -75,3 +78,6 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  keycloak_data:
+    driver: local
