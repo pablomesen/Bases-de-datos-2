@@ -1,2 +1,1 @@
-# Archivo que contiene directorios y archivos que no se deben copiar al contenedor
 ./venv

@@ -5,6 +5,8 @@ from ..config import DATABASE_URL
 from ..models.user import UserRole, UserCreate
 from ..models.post import PostType, PostCreate
 import datetime
+from jose import jwt
+from ..auth.keycloak import get_keycloak_public_key
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -45,12 +47,21 @@ class Database:
         return db_user
 
     def get_user_by_token(self, token: str):
-        # Implementar lógica para obtener usuario por token
-        pass
+        try:
+            public_key = get_keycloak_public_key()
+            payload = jwt.decode(
+                token,
+                f"-----BEGIN PUBLIC KEY-----\n{public_key}\n-----END PUBLIC KEY-----",
+                algorithms=["RS256"]
+            )
+            username = payload.get("preferred_username")
+            return self.db.query(UserDB).filter(UserDB.username == username).first()
+        except Exception:
+            return None
 
     def is_admin(self, token: str):
         user = self.get_user_by_token(token)
-        return user.role == UserRole.ADMIN
+        return user and user.role == UserRole.ADMIN
 
     def update_user(self, user_id: int, user: UserCreate):
         db_user = self.db.query(UserDB).filter(UserDB.id == user_id).first()

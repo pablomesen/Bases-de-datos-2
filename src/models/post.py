@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import ConfigDict, BaseModel
 from enum import Enum
 from datetime import datetime
 
@@ -20,6 +20,4 @@ class Post(PostBase):
     author_id: int
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

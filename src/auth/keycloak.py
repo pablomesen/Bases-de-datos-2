@@ -1,10 +1,14 @@
+import logging
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 import requests
 from ..config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/auth/token")
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_keycloak_public_key():
     url = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
@@ -41,9 +45,19 @@ def get_token(username: str, password: str):
         "username": username,
         "password": password,
     }
-    response = requests.post(
-        f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token",
-        data=data,
-    )
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.post(
+            f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token",
+            data=data,
+        )
+        logger.info(f"Request URL: {response.request.url}")
+        logger.info(f"Request headers: {response.request.headers}")
+        logger.info(f"Request body: {response.request.body}")
+        logger.info(f"Response status: {response.status_code}")
+        logger.info(f"Response content: {response.text}")
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        logger.error(f"Error al obtener token: {str(e)}")
+        logger.error(f"Respuesta: {e.response.text if e.response else 'No response'}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")

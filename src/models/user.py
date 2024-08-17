@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict, BaseModel, EmailStr
 from enum import Enum
 
 class UserRole(str, Enum):
@@ -17,6 +17,4 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     role: UserRole
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
