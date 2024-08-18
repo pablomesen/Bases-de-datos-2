@@ -62,10 +62,10 @@ Tutorial paso a paso de uso de la RestAPI para autenticación con Keycloak y Int
     - Detener todos los contenedores: docker-compose down
     - Iniciar los contenedores nuevamente: docker-compose up
     - Acceder a Keycloak y verificar que el realm, client y usuario aún existen
-  6. Autenticarse y usar la API: (ESTO SIGUE SIN FUNCIONAR)
+  6. Autenticarse y usar la API:
     a. Obtener un token:
       curl -X POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token -d "grant_type=password" -d "client_id=myclient" -d "client_secret=<secret_generado>" -d "username=testuser" -d "password=test"
-    b. Usar el token:
-      curl -H "Authorization: Bearer <token_obtenido>" http://localhost:8000/users/me
+    b. Usar el token: (ESTO AÚN NO FUNCIONA)
+      curl -H "Authorization: Bearer <token_obtenido>" http://localhost:8000/auth/me
 
 ----------------------------------------------------------------------------------------------------------------------------

@@ -1,63 +1,37 @@
-import logging
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-import requests
-from ..config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET
+from .jwt_handler import get_current_user
+from jose import JWTError
+from .keycloak_config import keycloak_openid
+from ..utils.db import Database
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def get_keycloak_public_key():
-    url = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()['public_key']
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+async def get_current_active_user(token: str = Depends(oauth2_scheme)):
     try:
-        public_key = get_keycloak_public_key()
-        payload = jwt.decode(
-            token,
-            f"-----BEGIN PUBLIC KEY-----\n{public_key}\n-----END PUBLIC KEY-----",
-            algorithms=["RS256"],
-            audience=KEYCLOAK_CLIENT_ID,
-        )
-        username: str = payload.get("preferred_username")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    return username
+        # Verificar el token con Keycloak
+        token_info = keycloak_openid.introspect(token)
+        if not token_info.get('active'):
+            raise HTTPException(status_code=401, detail="Token inactivo o inválido")
+        
+        # Obtener el nombre de usuario del token
+        username = token_info.get('preferred_username')
+        if not username:
+            raise HTTPException(status_code=401, detail="No se pudo obtener el nombre de usuario del token")
+        
+        # Buscar el usuario en la base de datos
+        db = Database()
+        user = db.get_user_by_username(username)
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado en la base de datos")
+        
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Error de autenticación: {str(e)}")
 
 def get_token(username: str, password: str):
-    data = {
-        "client_id": KEYCLOAK_CLIENT_ID,
-        "client_secret": KEYCLOAK_CLIENT_SECRET,
-        "grant_type": "password",
-        "username": username,
-        "password": password,
-    }
     try:
-        response = requests.post(
-            f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token",
-            data=data,
-        )
-        logger.info(f"Request URL: {response.request.url}")
-        logger.info(f"Request headers: {response.request.headers}")
-        logger.info(f"Request body: {response.request.body}")
-        logger.info(f"Response status: {response.status_code}")
-        logger.info(f"Response content: {response.text}")
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        logger.error(f"Error al obtener token: {str(e)}")
-        logger.error(f"Respuesta: {e.response.text if e.response else 'No response'}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        token = keycloak_openid.token(username, password)
+        return token
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Error al obtener el token: {str(e)}")

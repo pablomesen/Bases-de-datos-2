@@ -7,3 +7,5 @@ keycloak_openid = KeycloakOpenID(
     realm_name=KEYCLOAK_REALM,
     client_secret_key=KEYCLOAK_CLIENT_SECRET
 )
+
+# Este código obti

@@ -1,3 +1,5 @@
+# Contiene la información de conexión a la base de datos Postgres hosteada en AWS
+
 - ENDPOINT: postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com
 - Nombre de la base de datos: tc01db
 - Nombre de usuario maestro: tc01

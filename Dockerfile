@@ -1,3 +1,5 @@
+# Se crea una imagen de Docker con la versión de Python 3.12-slim, se instala poetry y se copian los archivos pyproject.toml y poetry.lock para instalar las dependencias del proyecto. Finalmente se copian los archivos del proyecto y se expone el puerto 8000 para que se pueda acceder a la aplicación.
+
 FROM python:3.12-slim
 
 WORKDIR /app

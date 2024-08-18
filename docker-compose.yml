@@ -1,3 +1,5 @@
+# Este código define los servicios que se van a correr en el contenedor de Docker, al igual que las variables de entorno que se van a utilizar en cada uno de los servicios, las redes que se van a utilizar para la comunicación entre los servicios.
+
 services:
   tc01:
     image: tc01
@@ -15,7 +17,7 @@ services:
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_CLIENT_ID=myclient
-      - KEYCLOAK_CLIENT_SECRET=ah0NpAfwqAsKdbpcHAFYstH5WqRWHLjh # ah0NpAfwqAsKdbpcHAFYstH5WqRWHLjh
+      - KEYCLOAK_CLIENT_SECRET=3f7CYjzq6aRp1cEMhvMQn1boInnDC1RE # Secret generado en Keycloak
     depends_on:
       - keycloak
     networks:
@@ -35,13 +37,14 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
+    restart: always
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/tc01db
-      KC_DB_USERNAME: tc01
-      KC_DB_PASSWORD: basesdedatos2024
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/tc01db
+      - KC_DB_USERNAME=tc01
+      - KC_DB_PASSWORD=basesdedatos2024
     ports:
       - "8080:8080"
     command:

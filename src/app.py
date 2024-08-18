@@ -1,3 +1,5 @@
+# Este código se encarga definir las rutas relacionadas con la autenticación, los usuarios y los posts. Además, configura el middleware CORS para permitir las solicitudes desde cualquier origen. Define un endpoint raíz que devuelva un mensaje de bienvenida. Y finalmente, inicia el servidor de desarrollo con Uvicorn en el puerto 8000.
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import auth, users, posts
