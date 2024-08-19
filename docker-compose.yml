@@ -17,7 +17,7 @@ services:
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_CLIENT_ID=myclient
-      - KEYCLOAK_CLIENT_SECRET=3f7CYjzq6aRp1cEMhvMQn1boInnDC1RE # Secret generado en Keycloak
+      - KEYCLOAK_CLIENT_SECRET=Be3IPQjtab5lrRXHMeZHTPQxLxetMruO # Secret generado en Keycloak
     depends_on:
       - keycloak
     networks:

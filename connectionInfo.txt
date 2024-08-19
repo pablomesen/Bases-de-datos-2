@@ -4,3 +4,10 @@
 - Nombre de la base de datos: tc01db
 - Nombre de usuario maestro: tc01
 - Password: basesdedatos2024
+
+
+
+1. registro -d "username=sdfsd" -d "pass=sdgdgsf" -> lo mete a la DB y a keycloak
+2. login -d "username=sdfsd" -d "pass=sdgdgsf" -> lo valida
+3. user tiene acceso a la API
+
