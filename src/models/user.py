@@ -1,28 +1,32 @@
-# Este código define un modelo de datos User que es usado para representar un usuario en la base de datos, y un modelo UserCreate que es usado para crear un usuario. Un modelo UserBase que es usado para definir los campos comunes entre User y UserCreate. También define un enumerador UserRole que representa los roles de usuario posibles.
+from sqlalchemy import Column, Integer, String, Boolean
+from pydantic import BaseModel
+from ..db import DBInstance
 
-from pydantic import ConfigDict, BaseModel, EmailStr
-from enum import Enum
+class UserDB(DBInstance.Base):
+    __tablename__ = "users"
 
-class UserRole(str, Enum):
-    ADMIN = "admin"
-    EDITOR = "editor"
-    READER = "reader"
-
-class UserBase(BaseModel):
-    email: EmailStr
-    username: str
-
-class UserCreate(UserBase):
-    password: str
-    role: UserRole = UserRole.READER
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)
+    is_active = Column(Boolean, default=True)
 
 class User(BaseModel):
     id: int
-    Name: str
-    Username: str
-    Email: EmailStr
-    UserLevel_id: int
-    IsActive: bool
-
+    name: str
+    username: str
+    email: str
+    is_active: bool
     class Config:
         from_attributes = True
+
+class KCUserCreate(BaseModel):
+    name: str
+    username: str
+    email: str
+    password: str
+
+class UserRegisterResponse(BaseModel):
+    message: str
+    user: User

@@ -1,5 +1,4 @@
-# Este código define los servicios que se van a correr en el contenedor de Docker, al igual que las variables de entorno que se van a utilizar en cada uno de los servicios, las redes que se van a utilizar para la comunicación entre los servicios.
-
+# Define los servicios, variables de entorno y redes necesarias para la ejecución de la aplicación
 services:
   tc01:
     image: tc01
@@ -9,15 +8,13 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DB_HOST=postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com
-      - DB_PORT=5432
-      - DB_NAME=tc01db
-      - DB_USER=tc01
-      - DB_PASSWORD=basesdedatos2024
+      - DATABASE_URL=postgresql://tc01:basesdedatos2024@postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/app
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_REALM=myrealm
       - KEYCLOAK_CLIENT_ID=myclient
-      - KEYCLOAK_CLIENT_SECRET=Be3IPQjtab5lrRXHMeZHTPQxLxetMruO # Secret generado en Keycloak
+      - KEYCLOAK_CLIENT_SECRET=zodCHPD4coNkVZ65vrWjkvCVHditrsFB
+      - KEYCLOAK_ADMIN_USER=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
     depends_on:
       - keycloak
     networks:
@@ -42,7 +39,7 @@ services:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
       - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/tc01db
+      - KC_DB_URL=jdbc:postgresql://postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/app
       - KC_DB_USERNAME=tc01
       - KC_DB_PASSWORD=basesdedatos2024
     ports:

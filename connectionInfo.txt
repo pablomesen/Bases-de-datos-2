@@ -1,13 +1,5 @@
 # Contiene la información de conexión a la base de datos Postgres hosteada en AWS
-
-- ENDPOINT: postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com
-- Nombre de la base de datos: tc01db
-- Nombre de usuario maestro: tc01
+- Host: postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com
+- DB name: app
+- Master Username: tc01
 - Password: basesdedatos2024
-
-
-
-1. registro -d "username=sdfsd" -d "pass=sdgdgsf" -> lo mete a la DB y a keycloak
-2. login -d "username=sdfsd" -d "pass=sdgdgsf" -> lo valida
-3. user tiene acceso a la API
-

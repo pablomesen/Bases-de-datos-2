@@ -1,26 +1,20 @@
-# Este código define un modelo de datos Post que es usado para representar un post en la base de datos, y un modelo PostCreate que es usado para crear un post. Un modelo PostBase que es usado para definir los campos comunes entre Post y PostCreate. También define un enumerador PostType que representa los tipos de post posibles.
+# Se representa la estructura de la tabla post y post_type en la base de datos
+# Se representa la estructura de la tabla post y post_type en la base de datos
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from ..db import DBInstance
 
-from pydantic import ConfigDict, BaseModel
-from enum import Enum
-from datetime import datetime
+class post(DBInstance.Base):
+    __tablename__ = "posts"
 
-class PostType(str, Enum):
-    TEXT = "text"
-    IMAGE = "image"
-    VIDEO = "video"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    content = Column(String)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    post_type_id = Column(Integer, ForeignKey("post_types.id"))
 
-class PostBase(BaseModel):
-    title: str
-    content: str
-    post_type: PostType
+class post_type(DBInstance.Base):
+    __tablename__ = "post_types"
 
-class PostCreate(PostBase):
-    pass
-
-class Post(BaseModel):
-    id: int
-    texto: str
-    user_id: int
-    post_type_id: int
-    url: str
-    model_config = ConfigDict(from_attributes=True)
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String)
+    post_id = Column(Integer, ForeignKey("posts.id"))
