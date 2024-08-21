@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean
 from pydantic import BaseModel
 from ..db import DBInstance
 
+# Modelos para la tabla de users
 class UserDB(DBInstance.Base):
     __tablename__ = "users"
 
@@ -10,7 +11,7 @@ class UserDB(DBInstance.Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String, index=True)
-    is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
 class User(BaseModel):
     id: int
@@ -22,6 +23,7 @@ class User(BaseModel):
     class Config:
         from_attributes = True
 
+# Modelos para la creación de usuarios
 class KCUserCreate(BaseModel):
     name: str
     username: str
@@ -31,3 +33,15 @@ class KCUserCreate(BaseModel):
 class UserRegisterResponse(BaseModel):
     message: str
     user: User
+
+# Modelo para el inicio de sesión
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UserToken(BaseModel):
+    access_token: str
+    token_type: str
+
+class UserRole(BaseModel):
+    role: str

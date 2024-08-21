@@ -1,13 +1,15 @@
 # Endpoint en el que se pueden realizar las operaciones CRUD para los usuarios.
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from ..models.user import User, UserDB, KCUserCreate, UserRegisterResponse
+from ..models.user import User, UserDB, KCUserCreate, UserRegisterResponse, LoginRequest, UserToken
 from ..db import DBInstance
 from ..auth.keycloak_config import get_keycloak_admin
+from ..auth.jwt_handler import generate_user_token, get_current_userId, TokenInfo
 
 router = APIRouter()
 
+# Endpoint para registrar un usuario en la base de datos y en Keycloak
 @router.post("/register", response_model=UserRegisterResponse)
 async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get_db)):
     try:
@@ -27,21 +29,13 @@ async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get
             }]
         })
 
-        print(f"Usuario creado en Keycloak: {new_keycloak_user}")
-        usuarios = keycloak_admin.get_users()
-        print(f"Usuarios en Keycloak: {usuarios}")
-        # Obtener el ID del usuario creado en Keycloak
-        new_keycloak_user_id = keycloak_admin.get_user_id(user.username)
-        print(f"ID del usuario en Keycloak: {new_keycloak_user_id}")
-
         # Crear usuario en la base de datos
         db_user = UserDB(
             name=user.name,
             username=user.username,
             email=user.email,
             password=user.password,
-            is_active=False
-        )
+            is_active=True)
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
@@ -53,30 +47,126 @@ async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get
         # Intenta eliminar el usuario de Keycloak si se creó
         try:
             if new_keycloak_user:
+                new_keycloak_user_id = keycloak_admin.get_user_id(user.username)
                 keycloak_admin.delete_user(new_keycloak_user_id)
         except:
             pass  # Si falla la eliminación en Keycloak, simplemente continúa
         print(f"Error detallado: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Error en el registro: {str(e)}")
 
-# # Aún no se ha probado esta función
-# async def get_current_active_user(token: str = Depends(oauth2_scheme), db: Session = DBInstance.db_session):
-#     try:
-#         # Verificar el token con Keycloak
-#         token_info = keycloak_openid.introspect(token)
-#         if not token_info.get('active'):
-#             raise HTTPException(status_code=401, detail="Token inactivo o inválido")
+# Enpoint para realizar login de un usuario
+@router.post("/login")
+async def login_user(login_request: LoginRequest, db: Session = Depends(DBInstance.get_db)):
+    try:
+        # Verificar si el usuario existe en Keycloak
+        keycloak_admin = get_keycloak_admin()
+        users = keycloak_admin.get_users()
+        user = next((u for u in users if u['username'] == login_request.username), None)
+        if not user:
+            raise HTTPException(status_code=400, detail="Usuario no encontrado en Keycloak")
         
-#         # Obtener el nombre de usuario del token
-#         username = token_info.get('preferred_username')
-#         if not username:
-#             raise HTTPException(status_code=401, detail="No se pudo obtener el nombre de usuario del token")
+        # Verificar si el usuario existe en la base de datos
+        db_user = db.query(UserDB).filter(UserDB.username == login_request.username).first()
+        if not db_user:
+            raise HTTPException(status_code=400, detail="Usuario no encontrado en la base de datos")
         
-#         # Buscar el usuario en la base de datos
-#         user = db.get_user_by_username(username)
-#         if not user:
-#             raise HTTPException(status_code=401, detail="Usuario no encontrado en la base de datos")
+        # Generar un token de acceso
+        access_token = generate_user_token(login_request.username, login_request.password)
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        print(f"Error detallado: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error en el login: {str(e)}")
+
+# Endpoint para hacer logout de un usuario en Keycloak
+@router.post("/logout")
+async def logout_user(token: str = Depends(get_current_userId)):
+    try:
+        keycloak_admin = get_keycloak_admin()
+        keycloak_admin.user_logout(token)
+        return {"message": "Logout realizado con éxito"}
+    except Exception as e:
+        print(f"Error detallado: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error en el logout: {str(e)}")
+
+# Endpoint para eliminar un usuario de la base de datos y de Keycloak
+@router.delete("/user/{username}", response_model=dict, response_class=JSONResponse)
+async def delete_user(username: str, token: TokenInfo = Depends(get_current_userId), db: Session = Depends(DBInstance.get_db)):
+    if "admin" not in token.roles:
+        raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
+
+    # Buscar al usuario en la base de datos
+    db_user = db.query(UserDB).filter(UserDB.username == username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos")
+    # Eliminación lógica en DB
+    db_user.is_active = False
+    db.commit()
+
+    # Eliminar al usuario en Keycloak
+    keycloak_admin = get_keycloak_admin()
+    try:
+        keycloak_user_id = keycloak_admin.get_user_id(username)
+        keycloak_admin.delete_user(keycloak_user_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error eliminando al usuario en Keycloak: {str(e)}")
+    return {"message": f"Usuario {username} eliminado con éxito"}
+
+'''
+    BORRADO DE USUARIOS DE LA BASE DE DATOS POR USERNAME
+    // Solo son ejecutables por un usuario administrador
+
+        VALIDACIONES: 
+            - Se debe de validar que el usuario que ejecuta la petición sea administrador
+            - Se debe de validar que no se trate de borrar a el mismo
         
-#         return user
-#     except Exception as e:
-#         raise HTTPException(status_code=401, detail=f"Error de autenticación: {str(e)}")
+        AMBAS VALIDACIONES DEBEN DE SER REALIZADAS CON LA INFOMRACIÓN DE KEYCLOAK
+        
+@app.delete("/users/{username}")
+async def delete_user_by_username(username: str, db: db_dependency):
+    db_user = db.query(models.users).filter(models.users.username == username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if db_user.is_active == False:
+        raise HTTPException(status_code=400, detail="User is already deactivated")
+    db_user.is_active = False  # Setear isActive a False en lugar de borrar al usuario
+    db.commit()
+    return {"message": "User deactivated successfully"}
+
+
+    ACTUALIZACIÓN DE INFORMACIÓN DE USUARIOS POR USERNAME
+    // Solo ejecutable para usuario 'Administrator' o usuarios "Editor" dueños del perfil
+
+        VALIDACIONES: 
+            - Se debe de validar que el usuario que ejecuta la petición sea administrador o editor
+            - En caso de que el usuario sea editor, se debe de validar que sea el dueño del perfil que se desea actualizar
+        
+        AMBAS VALIDACIONES DEBEN DE SER REALIZADAS CON LA INFOMRACIÓN DE KEYCLOAK
+
+@app.put("/users/{username}")
+async def update_user(username: str, user: userBase, db: db_dependency):
+    db_user = db.query(models.users).filter(models.users.username == username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if db_user.is_active == False:
+        raise HTTPException(status_code=400, detail="User is deactivated")
+    db_user.username = user.username
+    db_user.email = user.email
+    db_user.name = user.name
+    db_user.password = user.password
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.post("/posts/")
+async def create_post(username: str, post: postBase, db: db_dependency):
+    db_user = db.query(models.users).filter(models.users.username == username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    else:
+        db_user.id
+        db_post = models.posts(title=post.title, content=post.content, post_type_id=post.post_type_id, user_id=db_user.id)
+        db.add(db_post)
+        db.commit()
+        db.refresh(db_post)
+        return db_post
+'''

@@ -15,7 +15,7 @@ Explicación del código:
   2. Autenticación con Keycloak:
     - El archivo src/auth/keycloak.py maneja la interacción con Keycloak.
     - get_keycloak_public_key() obtiene la clave pública de Keycloak para verificar tokens.
-    - get_current_user() valida el token JWT y extrae el nombre de usuario.
+    - get_current_userId() valida el token JWT y extrae el id de usuario.
     - get_token() se utiliza para obtener un token de acceso de Keycloak.
   3. Interacción con la base de datos:
     - src/utils/db.py contiene la clase Database que maneja todas las operaciones de la base de datos.
@@ -56,10 +56,14 @@ Tutorial paso a paso de uso de la RestAPI para autenticación con Keycloak y Int
     e. Desde pgAdmin se puede interactuar de manera libre con la base de datos.
   5. Uso de la API:
     a. Registrarse a la app:
-      curl -X POST http://localhost:8000/users/register -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"name": "<nombre>","username": "<username>","email": "<email>","password": "<password>"}'
-    b. Login a la app:
-      curl -X POST http://localhost:8000/users/login -d "grant_type=password" -d "client_id=myclient" -d "client_secret=<secret_generado>" -d "username=testuser" -d "password=test"
-    b. Usar el token: (ESTO AÚN NO FUNCIONA)
-      curl -H "Authorization: Bearer <token_obtenido>" http://localhost:8000/auth/me
 
 ----------------------------------------------------------------------------------------------------------------------------
+COMANDOS CURL
+- Registro de user: 
+  curl -X POST "http://localhost:8000/users/register" -H "Content-Type: application/json" -d '{"name": "","username": "","email": "","password": ""}'
+
+- Login:
+  curl -X POST "http://localhost:8000/users/login" -H "Content-Type: application/json" -d '{"username": "","password": ""}'
+
+- Logout:
+  curl -X POST "http://localhost:8000/users/logout" -H "Authorization: Bearer <token_obtenido>"
