@@ -19,7 +19,7 @@ app.include_router(posts.router, prefix="/posts", tags=["Posts"])
 
 @app.get("/")
 async def root():
-    return {"message": "Bienvenido a la TC01 de BD2! :)    Accede a /docs para ver la documentación de endpoints."}
+    return {"message": "Bienvenido a la TC01 de BD2! :) Accede a /docs para ver la documentación de endpoints."}
 
 # Crea las tablas definidas en los modelos antes de iniciar la aplicación
 DBInstance.Base.metadata.create_all(bind=DBInstance.engine)

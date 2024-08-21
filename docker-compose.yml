@@ -8,13 +8,13 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DATABASE_URL=postgresql://tc01:basesdedatos2024@postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/app
-      - KEYCLOAK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=myrealm
-      - KEYCLOAK_CLIENT_ID=myclient
-      - KEYCLOAK_CLIENT_SECRET=zodCHPD4coNkVZ65vrWjkvCVHditrsFB
-      - KEYCLOAK_ADMIN_USER=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - DATABASE_URL=${DATABASE_URL}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - KEYCLOAK_ADMIN_USER=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
     depends_on:
       - keycloak
     networks:
@@ -23,8 +23,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - 5050:80
     volumes:
@@ -36,12 +36,12 @@ services:
     image: quay.io/keycloak/keycloak:latest
     restart: always
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://postgresdb.cfse8m80m5up.us-east-2.rds.amazonaws.com:5432/app
-      - KC_DB_USERNAME=tc01
-      - KC_DB_PASSWORD=basesdedatos2024
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=${KC_DB}
+      - KC_DB_URL=${KC_DB_URL}
+      - KC_DB_USERNAME=${KC_DB_USERNAME}
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD}
     ports:
       - "8080:8080"
     command:

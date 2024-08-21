@@ -6,7 +6,6 @@ Autores:
   - Esteban Josué Solano Araya
   - Pablo Mauricio Mesén Alvarado 
 ----------------------------------------------------------------------------------------------------------------------------
-
 Explicación del código:
 
   1. Estructura general: 
@@ -20,7 +19,7 @@ Explicación del código:
     - get_token() se utiliza para obtener un token de acceso de Keycloak.
   3. Interacción con la base de datos:
     - src/utils/db.py contiene la clase Database que maneja todas las operaciones de la base de datos.
-    - Utiliza SQLAlchemy para definir modelos (UserDB y PostDB) que se mapean a tablas en la base de datos.
+    - Utiliza SQLAlchemy y Pydantic para definir modelos (UserDB y PostDB) que se mapean a tablas en la base de datos.
     - Proporciona métodos CRUD para usuarios y posts.
   4. Rutas API:
     - src/routes/ contiene los archivos que definen los endpoints de la API.
@@ -42,29 +41,24 @@ Tutorial paso a paso de uso de la RestAPI para autenticación con Keycloak y Int
       - Client Protocol: openid-connect
       - Access Type: confidential
       - Valid Redirect URIs: http://localhost:8000/*
-    e. Después de crear el cliente, ir a la pestaña "Credentials" y copiar el "Secret"
+    e. Después de crear el cliente, ir a la pestaña "Credentials" y copiar el "Secret" en el .env
     f. Crear un nuevo usuario en el realm:
       - Username: testuser
       - Email: testuser@example.com
-      - Crear una contraseña para el user (contraseña=test)
-  4. Interactuar con la base de datos:
+      - Crear una contraseña para el user
+  4. Interactuar con la base de datos con pgAdmin:
     a. Acceder a pgAdmin en http://localhost:5050
     b. Iniciar sesión con el email "admin@example.com" y contraseña "admin"
     c. Agregar un nuevo servidor: (Una vez se hace la conexión ya se conecta automáticamente al ingresar debido al volume)
       - La información de conectividad se encuentra en el
         archivo de texto "ConnectionInfo.txt"
-    d. La base de datos esta ubicada en la nube utilizando
-       los servicios de AWS, por lo que la persistencia de datos
-       es practicamente garantizada
-    e. Desde el pgAdmin se puede interactuar de manera libre con la base de
-       de datos.
-  5. Verificar la persistencia de datos:
-    - Detener todos los contenedores: docker-compose down
-    - Iniciar los contenedores nuevamente: docker-compose up
-    - Acceder a Keycloak y verificar que el realm, client y usuario aún existen
-  6. Autenticarse y usar la API:
-    a. Obtener un token:
-      curl -X POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token -d "grant_type=password" -d "client_id=myclient" -d "client_secret=<secret_generado>" -d "username=testuser" -d "password=test"
+      - La base de datos esta ubicada en la nube utilizando los servicios de AWS, por lo que la persistencia de datos es practicamente garantizada
+    e. Desde pgAdmin se puede interactuar de manera libre con la base de datos.
+  5. Uso de la API:
+    a. Registrarse a la app:
+      curl -X POST http://localhost:8000/users/register -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"name": "<nombre>","username": "<username>","email": "<email>","password": "<password>"}'
+    b. Login a la app:
+      curl -X POST http://localhost:8000/users/login -d "grant_type=password" -d "client_id=myclient" -d "client_secret=<secret_generado>" -d "username=testuser" -d "password=test"
     b. Usar el token: (ESTO AÚN NO FUNCIONA)
       curl -H "Authorization: Bearer <token_obtenido>" http://localhost:8000/auth/me
 

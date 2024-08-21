@@ -9,14 +9,15 @@ class UserDB(DBInstance.Base):
     name = Column(String, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
-    password = Column(String)
-    is_active = Column(Boolean, default=True)
+    password = Column(String, index=True)
+    is_active = Column(Boolean, default=False)
 
 class User(BaseModel):
     id: int
     name: str
     username: str
     email: str
+    password: str
     is_active: bool
     class Config:
         from_attributes = True

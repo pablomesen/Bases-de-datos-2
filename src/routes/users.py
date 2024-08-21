@@ -40,7 +40,7 @@ async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get
             username=user.username,
             email=user.email,
             password=user.password,
-            is_active=True
+            is_active=False
         )
         db.add(db_user)
         db.commit()
@@ -58,20 +58,6 @@ async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get
             pass  # Si falla la eliminación en Keycloak, simplemente continúa
         print(f"Error detallado: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Error en el registro: {str(e)}")
-
-@router.post("/register/onlyOnDB", response_model=User)
-async def create_user(user: User, db: Session = Depends(DBInstance.get_db)):
-    db_user = UserDB(
-        name=user.name,
-        username=user.username,
-        email=user.email,
-        password=user.password,
-        is_active=user.is_active
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return User.model_validate(db_user)
 
 # # Aún no se ha probado esta función
 # async def get_current_active_user(token: str = Depends(oauth2_scheme), db: Session = DBInstance.db_session):
