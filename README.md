@@ -63,7 +63,10 @@ COMANDOS CURL
   curl -X POST "http://localhost:8000/users/register" -H "Content-Type: application/json" -d '{"name": "","username": "","email": "","password": ""}'
 
 - Login:
-  curl -X POST "http://localhost:8000/users/login" -H "Content-Type: application/json" -d '{"username": "","password": ""}'
+  curl -X POST "http://localhost:8000/users/login" -H "Content-Type: application/json" -d '{"username": "admin","password": "123"}'
 
 - Logout:
   curl -X POST "http://localhost:8000/users/logout" -H "Authorization: Bearer <token_obtenido>"
+
+- Delete:
+  curl -X DELETE "http://localhost:8000/users/delete/curl" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json"

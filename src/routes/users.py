@@ -89,26 +89,37 @@ async def logout_user(token: str = Depends(get_current_userId)):
         raise HTTPException(status_code=400, detail=f"Error en el logout: {str(e)}")
 
 # Endpoint para eliminar un usuario de la base de datos y de Keycloak
-@router.delete("/user/{username}", response_model=dict, response_class=JSONResponse)
-async def delete_user(username: str, token: TokenInfo = Depends(get_current_userId), db: Session = Depends(DBInstance.get_db)):
+@router.delete("/delete/{username}", response_model=dict, response_class=JSONResponse)
+async def delete_user(username: str, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
+    print(token.roles)
+
+    # Verifica que el usuario tenga el rol de 'admin'
     if "admin" not in token.roles:
         raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
-
+    
+    print("Verificación de roles exitosa")
+    
     # Buscar al usuario en la base de datos
     db_user = db.query(UserDB).filter(UserDB.username == username).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos")
-    # Eliminación lógica en DB
+    
+    # Realiza una eliminación lógica en la base de datos
+    print(f"Usuario encontrado: {db_user}")
     db_user.is_active = False
     db.commit()
+
+    print("Eliminación lógica en la base de datos realizada")
 
     # Eliminar al usuario en Keycloak
     keycloak_admin = get_keycloak_admin()
     try:
         keycloak_user_id = keycloak_admin.get_user_id(username)
         keycloak_admin.delete_user(keycloak_user_id)
+        print("Usuario eliminado en Keycloak")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error eliminando al usuario en Keycloak: {str(e)}")
+    
     return {"message": f"Usuario {username} eliminado con éxito"}
 
 '''
