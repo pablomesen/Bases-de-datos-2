@@ -23,6 +23,13 @@ class User(BaseModel):
     class Config:
         from_attributes = True
 
+# Modelos para la tabla de posts
+
+class postBase(BaseModel):
+    title: str
+    content: str
+    post_type_id: int
+
 # Modelos para la creación de usuarios
 class KCUserCreate(BaseModel):
     name: str

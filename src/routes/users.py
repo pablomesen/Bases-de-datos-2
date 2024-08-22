@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from ..models.user import User, UserDB, KCUserCreate, UserRegisterResponse, LoginRequest, UserToken
+from ..models.user import User, UserDB, KCUserCreate, UserRegisterResponse, LoginRequest, UserToken, postBase
 from ..db import DBInstance
 from ..auth.keycloak_config import get_keycloak_admin
 from ..auth.jwt_handler import generate_user_token, get_current_userId, TokenInfo
@@ -22,7 +22,7 @@ async def register_user(user: KCUserCreate, db: Session = Depends(DBInstance.get
             "lastName": " ".join(user.name.split()[1:]) if user.name and len(user.name.split()) > 1 else "",
             "enabled": True,
             "emailVerified": True,
-            "credentials": [{
+            "credentials": [{   
                 "type": "password",
                 "value": user.password,
                 "temporary": False
@@ -122,43 +122,96 @@ async def delete_user(username: str, token: TokenInfo = Depends(TokenInfo.get_cu
     
     return {"message": f"Usuario {username} eliminado con éxito"}
 
-'''
+@router.put("/update/{username}", response_model=UserDB)
+async def update_user(username: str, user: User, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
 
-
-    ACTUALIZACIÓN DE INFORMACIÓN DE USUARIOS POR USERNAME
-    // Solo ejecutable para usuario 'Administrator' o usuarios "Editor" dueños del perfil
-
-        VALIDACIONES: 
-            - Se debe de validar que el usuario que ejecuta la petición sea administrador o editor
-            - En caso de que el usuario sea editor, se debe de validar que sea el dueño del perfil que se desea actualizar
-        
-        AMBAS VALIDACIONES DEBEN DE SER REALIZADAS CON LA INFOMRACIÓN DE KEYCLOAK
-
-@app.put("/users/{username}")
-async def update_user(username: str, user: userBase, db: db_dependency):
-    db_user = db.query(models.users).filter(models.users.username == username).first()
+    # Verificar si el usuario existe en la base de datos, de ser así, lo obtiene
+    db_user = db.query(UserDB).filter(UserDB.username == username).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos")
     if db_user.is_active == False:
-        raise HTTPException(status_code=400, detail="User is deactivated")
+        raise HTTPException(status_code=400, detail="Usuario desactivado")
+    
+    # Verifica que el usuario tenga el rol de 'admin'
+    if "admin" not in token.roles:
+        if "editor" not in token.roles:
+            raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
+        else:
+            # Verifica que el usuario sea el dueño del perfil
+            if token.username != username:
+                raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
+            
+            # Actualizar información en la base de datos
+            db_user.username = user.username
+            db_user.email = user.email
+            db_user.name = user.name
+            db_user.password = user.password
+            db.commit()
+            db.refresh(db_user)
+            
+            # Actualizar información en Keycloak
+            keycloak_admin = get_keycloak_admin()
+            try:
+                keycloak_user_id  = keycloak_admin.get_user_id(username)
+                keycloak_admin.update_user(keycloak_user_id, {
+                    "username": user.username,
+                    "email": user.email,
+                    "firstName": user.name.split()[0] if user.name else "",
+                    "lastName": " ".join(user.name.split()[1:]) if user.name and len(user.name.split()) > 1 else "",
+                    "credentials": [{
+                        "type": "password",
+                        "value": user.password,
+                        "temporary": False
+                    }]
+                })
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Error actualizando al usuario en Keycloak: {str(e)}")
+
+            return db_user    
+
+    # Es administrador, puede actualizar cualquier perfil
+    # Actualizar información en la base de datos
     db_user.username = user.username
     db_user.email = user.email
     db_user.name = user.name
     db_user.password = user.password
     db.commit()
     db.refresh(db_user)
-    return db_user
 
-@app.post("/posts/")
-async def create_post(username: str, post: postBase, db: db_dependency):
-    db_user = db.query(models.users).filter(models.users.username == username).first()
+    # Actualizar información en Keycloak
+    keycloak_admin = get_keycloak_admin()
+    try:
+        keycloak_user_id  = keycloak_admin.get_user_id(username)
+        keycloak_admin.update_user(keycloak_user_id, {
+            "username": user.username,
+            "email": user.email,
+            "firstName": user.name.split()[0] if user.name else "",
+            "lastName": " ".join(user.name.split()[1:]) if user.name and len(user.name.split()) > 1 else "",
+            "credentials": [{
+                "type": "password",
+                "value": user.password,
+                "temporary": False
+            }]
+        })
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error actualizando al usuario en Keycloak: {str(e)}")
+
+
+    return db_user               
+
+@router.post("/posts/")
+async def create_post(username: str, post: postBase, db: Session = Depends(DBInstance.get_db)):
+    
+    db_user = db.query(UserDB).filter(UserDB.username == username).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if 'reader' in db_user.roles:
+        raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
+
     else:
-        db_user.id
-        db_post = models.posts(title=post.title, content=post.content, post_type_id=post.post_type_id, user_id=db_user.id)
+        db_post = postBase(title=post.title, content=post.content, post_type_id=post.post_type_id, user_id=db_user.id)
         db.add(db_post)
         db.commit()
         db.refresh(db_post)
         return db_post
-'''
