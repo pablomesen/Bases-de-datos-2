@@ -123,25 +123,6 @@ async def delete_user(username: str, token: TokenInfo = Depends(TokenInfo.get_cu
     return {"message": f"Usuario {username} eliminado con éxito"}
 
 '''
-    BORRADO DE USUARIOS DE LA BASE DE DATOS POR USERNAME
-    // Solo son ejecutables por un usuario administrador
-
-        VALIDACIONES: 
-            - Se debe de validar que el usuario que ejecuta la petición sea administrador
-            - Se debe de validar que no se trate de borrar a el mismo
-        
-        AMBAS VALIDACIONES DEBEN DE SER REALIZADAS CON LA INFOMRACIÓN DE KEYCLOAK
-        
-@app.delete("/users/{username}")
-async def delete_user_by_username(username: str, db: db_dependency):
-    db_user = db.query(models.users).filter(models.users.username == username).first()
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if db_user.is_active == False:
-        raise HTTPException(status_code=400, detail="User is already deactivated")
-    db_user.is_active = False  # Setear isActive a False en lugar de borrar al usuario
-    db.commit()
-    return {"message": "User deactivated successfully"}
 
 
     ACTUALIZACIÓN DE INFORMACIÓN DE USUARIOS POR USERNAME
