@@ -7,7 +7,8 @@ Autores:
   - Esteban Josué Solano Araya
   - Pablo Mauricio Mesén Alvarado 
 
-Link al video demostrativo:  
+Link al video demostrativo: https://youtu.be/I9h9JbLNmC8
+Documentación endpoints: https://documenter.getpostman.com/view/37669841/2sAXjDfvbR
 ----------------------------------------------------------------------------------------------------------------------------
 
 Explicación del código:
