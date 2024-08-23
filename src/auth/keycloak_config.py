@@ -1,6 +1,6 @@
 # Contiene la configuración de keycloak para la autenticación de usuarios y la creación de usuarios en la base de datos.
 from keycloak import KeycloakAdmin
-from ..config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, JWT_SECRET_KEY, JWT_ALGORITHM
+from ..config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET
 
 def get_keycloak_admin():
     return KeycloakAdmin(

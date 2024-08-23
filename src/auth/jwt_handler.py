@@ -5,18 +5,12 @@ from typing import List
 from pydantic import BaseModel
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from .keycloak_config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, JWT_SECRET_KEY, JWT_ALGORITHM
-
-public_key = """
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtMJ3XVqi1WVGdNf/Bf0ehaxWiUcsBFtS7N9gbe1F6KmoGV4EOPTdtB0STScy3LB7VrnfCwmGGlcdSznTNyap3bS1yhBZvKDaZvAbreOBfQIst8VUY3rCVvEhQgCxhqpNEQemSffznxYW1cy7VYCnc7cjOuvNI7ci9ir5/CoFkHwz0aOURh+dbfAuDhpH1fmfNzpEA5EXUTjRlQtrUFDugYVyJKZ9ULyYmpAeuW3OdPMIfFVi2NPQVTbsLAxJDQwf8aQ2UuF/LSAy4u1prgkFgxCfL4HrEszYWnbp6i9XURGw5d4XIddjkSIQlZeZrnc9hkYQyMqc5PfIJWH4cO6rvQIDAQAB
------END PUBLIC KEY-----
-"""
+from ..config import KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KC_PUBLIC_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 async def get_current_userId(token: str = Depends(oauth2_scheme)):
     try:
-      payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=KEYCLOAK_CLIENT_ID)
+      payload = jwt.decode(token, KC_PUBLIC_KEY, algorithms=["RS256"], audience=KEYCLOAK_CLIENT_ID)
       user_id = payload.get("sub")
     except JWTError as e:
         raise HTTPException(status_code=400, detail=f"Credenciales inválidas: {str(e)}")
@@ -33,7 +27,7 @@ class TokenInfo(BaseModel):
     async def get_current_userId(cls, token: str = Depends(oauth2_scheme)):
         try:
             # Decodifica el token JWT utilizando la clave pública y el cliente de Keycloak
-            payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=KEYCLOAK_CLIENT_ID)
+            payload = jwt.decode(token, KC_PUBLIC_KEY, algorithms=["RS256"], audience=KEYCLOAK_CLIENT_ID)
             user_id = payload.get("sub")
             username = payload.get("preferred_username")
             email = payload.get("email")

@@ -1,16 +1,20 @@
 ----------------------------------------------------------------------------------------------------------------------------
+
 IC4302 - Bases de Datos II
 TC01 - Despliegue de Aplicaciones con Docker y PostgreSQL
 Autores:
   - Daniel Zeas Brown
   - Esteban Josué Solano Araya
   - Pablo Mauricio Mesén Alvarado 
+
+Link al video demostrativo:  
 ----------------------------------------------------------------------------------------------------------------------------
+
 Explicación del código:
 
   1. Estructura general: 
     - La aplicación está construida con FastAPI, un framework moderno para crear APIs con Python.
-    - Utiliza SQLAlchemy como ORM para interactuar con la base de datos PostgreSQL.
+    - Utiliza SQLAlchemy como ORM (Object Relational Mapping) para interactuar con la base de datos PostgreSQL.
     - Keycloak se utiliza para la autenticación y autorización.
   2. Autenticación con Keycloak:
     - El archivo src/auth/keycloak.py maneja la interacción con Keycloak.
@@ -42,7 +46,7 @@ Tutorial paso a paso de uso de la RestAPI para autenticación con Keycloak y Int
       - Access Type: confidential
       - Valid Redirect URIs: http://localhost:8000/*
     e. Después de crear el cliente, ir a la pestaña "Credentials" y copiar el "Secret" en el .env
-    f. Crear un nuevo usuario en el realm:
+      f. Crear un nuevo usuario en el realm:
       - Username: testuser
       - Email: testuser@example.com
       - Crear una contraseña para el user
@@ -55,26 +59,35 @@ Tutorial paso a paso de uso de la RestAPI para autenticación con Keycloak y Int
       - La base de datos esta ubicada en la nube utilizando los servicios de AWS, por lo que la persistencia de datos es practicamente garantizada
     e. Desde pgAdmin se puede interactuar de manera libre con la base de datos.
   5. Uso de la API:
-    a. Registrarse a la app:
+      COMANDOS CURL
+      - Registro de user: 
+        curl -X POST "http://localhost:8000/users/register" -H "Content-Type: application/json" -d '{"name": "","username": "","email": "","password": ""}'
+
+      - Login:
+        curl -X POST "http://localhost:8000/users/login" -H "Content-Type: application/json" -d '{"username": "admin","password": "123"}'
+
+      - Logout:
+        curl -X POST "http://localhost:8000/users/logout" -H "Authorization: Bearer <token_obtenido>"
+
+      - Delete:
+        curl -X DELETE "http://localhost:8000/users/delete/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json"
+
+      - Update user:
+        curl -X PUT "http://localhost:8000/users/update/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json" -d '{"id": ,"name": "","username": "","email": "","password": "","is_active": true}'
 
 ----------------------------------------------------------------------------------------------------------------------------
-COMANDOS CURL
-- Registro de user: 
-  curl -X POST "http://localhost:8000/users/register" -H "Content-Type: application/json" -d '{"name": "","username": "","email": "","password": ""}'
 
-- Login:
-  curl -X POST "http://localhost:8000/users/login" -H "Content-Type: application/json" -d '{"username": "admin","password": "123"}'
+DOCUMENTACIÓN DE LAS POLÍTICAS DE ACCESO DE CADA NIVEL DE USUARIO:
 
-- Logout:
-  curl -X POST "http://localhost:8000/users/logout" -H "Authorization: Bearer <token_obtenido>"
+  Administrador:
 
-- Delete:
-  curl -X DELETE "http://localhost:8000/users/delete/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json"
+    El usuario con nivel de acceso de "Administrador" tiene acceso a todos los métodos de la API. Este puede tanto eliminar a usuarios de la base de datos, como cambiar la información de perfil de cualquier perfil. Puede publicar "Posts" con libertad
 
-- Update user:
-  curl -X PUT "http://localhost:8000/users/update/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json" -d '{"id": ,"name": "","username": "","email": "","password": "","is_active": true}'
+  Editor:
 
-- Post:
-  curl -X POST "http://localhost:8000/users/update/<username>" -H "Content-Type: application/json" -H "Authorization: Bearer <token_obtenido>" -d '{"username": "usuario_objetivo","postBase": {"title": "Título del post","content": "Contenido del post","post_type_id": 1}}'
+    El nivel de acceso "Editor" tiene restricciones mayores. A este no se le es permitido desactivar a ningun usuario, y unicamente puede actualizar la información de su propio perfil. Puede publicar "Posts" con libertad
 
-curl -X POST "http://localhost:8000/posts/" -H "Authorization: Bearer <your_token>" -H "Content-Type: application/json" -d '{"username": "example_user","title": "Example Post Title","content": "This is the content of the example post.","post_type_id": 1}'
+  Lector:
+
+    El nivel de acceso mas débil es el de "Lector". Básicamente al no estar incluido el método de la API para poder ver las publicaciones que residen en la base de datos los usuarios con este rol no pueden hacer nada. 
+

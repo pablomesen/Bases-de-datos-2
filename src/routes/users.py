@@ -92,25 +92,17 @@ async def logout_user(token: str = Depends(get_current_userId)):
 # Endpoint para eliminar un usuario de la base de datos y de Keycloak
 @router.delete("/delete/{username}", response_model=dict, response_class=JSONResponse)
 async def delete_user(username: str, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
-    print(token.roles)
-
     # Verifica que el usuario tenga el rol de 'admin'
     if "admin" not in token.roles:
         raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
-    
-    print("Verificación de roles exitosa")
     
     # Buscar al usuario en la base de datos
     db_user = db.query(UserDB).filter(UserDB.username == username).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos")
-    
     # Realiza una eliminación lógica en la base de datos
-    print(f"Usuario encontrado: {db_user}")
     db_user.is_active = False
     db.commit()
-
-    print("Eliminación lógica en la base de datos realizada")
 
     # Eliminar al usuario en Keycloak
     keycloak_admin = get_keycloak_admin()
@@ -125,7 +117,6 @@ async def delete_user(username: str, token: TokenInfo = Depends(TokenInfo.get_cu
 
 @router.put("/update/{username}", response_model=dict, response_class=JSONResponse)
 async def update_user(username: str, user: User, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
-
     # Verificar si el usuario existe en la base de datos, de ser así, lo obtiene
     db_user = db.query(UserDB).filter(UserDB.username == username).first()
     if not db_user:
@@ -153,7 +144,7 @@ async def update_user(username: str, user: User, token: TokenInfo = Depends(Toke
             # Actualizar información en Keycloak
             keycloak_admin = get_keycloak_admin()
             try:
-                keycloak_user_id  = keycloak_admin.get_user_id(username)
+                keycloak_user_id = keycloak_admin.get_user_id(username)
                 keycloak_admin.update_user(keycloak_user_id, {
                     "username": user.username,
                     "email": user.email,
@@ -166,8 +157,8 @@ async def update_user(username: str, user: User, token: TokenInfo = Depends(Toke
                     }]
                 })
             except Exception as e:
+                db.rollback()
                 raise HTTPException(status_code=400, detail=f"Error actualizando al usuario en Keycloak: {str(e)}")
-
             return {"message": "Usuario actualizado con éxito"}
 
     # Es administrador, puede actualizar cualquier perfil
@@ -182,8 +173,7 @@ async def update_user(username: str, user: User, token: TokenInfo = Depends(Toke
     # Actualizar información en Keycloak
     keycloak_admin = get_keycloak_admin()
     try:
-        keycloak_user_id  = keycloak_admin.get_user_id(username)
-        print(keycloak_user_id)
+        keycloak_user_id = keycloak_admin.get_user_id(username)
         keycloak_admin.update_user(keycloak_user_id, {
             "username": user.username,
             "email": user.email,
@@ -196,32 +186,30 @@ async def update_user(username: str, user: User, token: TokenInfo = Depends(Toke
             }]
         })
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error actualizando al usuario en Keycloak: {str(e)}")
-
-
-    return {"message": "Usuario actualizado con éxito"}            
-
-@router.post("/posts/")
-async def create_post(username: str, postBase: PostBase, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
-    db_user = db.query(UserDB).filter(UserDB.username == username).first()
-    if not db_user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    if 'reader' in token.roles:
-        raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
-
-    try:
-        db_post = Post(
-            title=postBase.title, 
-            content=postBase.content, 
-            post_type_id=postBase.post_type_id, 
-            user_id=db_user.id
-        )
-        db.add(db_post)
-        db.commit()
-        db.refresh(db_post)
-        return db_post
-    except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al crear el post: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Error actualizando al usuario en Keycloak: {str(e)}")
+    return {"message": "Usuario actualizado con éxito"}          
+
+# @router.post("/posts/")
+# async def create_post(username: str, postBase: PostBase, token: TokenInfo = Depends(TokenInfo.get_current_userId), db: Session = Depends(DBInstance.get_db)):
+#     db_user = db.query(UserDB).filter(UserDB.username == username).first()
+#     if not db_user:
+#         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
+#     if 'reader' in token.roles:
+#         raise HTTPException(status_code=403, detail="No tiene permisos para realizar esta acción")
+
+#     try:
+#         db_post = Post(
+#             title=postBase.title, 
+#             content=postBase.content, 
+#             post_type_id=postBase.post_type_id, 
+#             user_id=db_user.id
+#         )
+#         db.add(db_post)
+#         db.commit()
+#         db.refresh(db_post)
+#         return db_post
+#     except Exception as e:
+#         db.rollback()
+#         raise HTTPException(status_code=500, detail=f"Error al crear el post: {str(e)}") 
