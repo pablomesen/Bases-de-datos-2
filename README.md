@@ -69,4 +69,12 @@ COMANDOS CURL
   curl -X POST "http://localhost:8000/users/logout" -H "Authorization: Bearer <token_obtenido>"
 
 - Delete:
-  curl -X DELETE "http://localhost:8000/users/delete/curl" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json"
+  curl -X DELETE "http://localhost:8000/users/delete/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json"
+
+- Update user:
+  curl -X PUT "http://localhost:8000/users/update/<username>" -H "Authorization: Bearer <token_obtenido>" -H "Content-Type: application/json" -d '{"id": ,"name": "","username": "","email": "","password": "","is_active": true}'
+
+- Post:
+  curl -X POST "http://localhost:8000/users/update/<username>" -H "Content-Type: application/json" -H "Authorization: Bearer <token_obtenido>" -d '{"username": "usuario_objetivo","postBase": {"title": "Título del post","content": "Contenido del post","post_type_id": 1}}'
+
+curl -X POST "http://localhost:8000/posts/" -H "Authorization: Bearer <your_token>" -H "Content-Type: application/json" -d '{"username": "example_user","title": "Example Post Title","content": "This is the content of the example post.","post_type_id": 1}'

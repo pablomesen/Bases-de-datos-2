@@ -3,14 +3,14 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from ..db import DBInstance
 
-class post(DBInstance.Base):
+class Post(DBInstance.Base):
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    content = Column(String)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    post_type_id = Column(Integer, ForeignKey("post_types.id"))
+    title = Column(String, index=True, nullable=False)
+    content = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    post_type_id = Column(Integer, ForeignKey("post_types.id"), nullable=False)
 
 class post_type(DBInstance.Base):
     __tablename__ = "post_types"
